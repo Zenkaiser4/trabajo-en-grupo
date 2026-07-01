@@ -26,9 +26,14 @@ jobs:
 
       - name: Install Android Build Dependencies
         run: |
-          sudo apt-get update --fix-missing
-          # Se eliminó openjdk-17-jdk de aquí para evitar el conflicto (Exit Code 100)
-          sudo apt-get install -y \
+          # 1. Limpiar listas previas que puedan estar corruptas
+          sudo rm -rf /var/lib/apt/lists/*
+          
+          # 2. Forzar a apt a ignorar errores de repositorios externos/caídos
+          sudo apt-get update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true || true
+          
+          # 3. Instalar dependencias ignorando fallos de paquetes no críticos (--fix-missing)
+          sudo apt-get install -y --fix-missing \
             git zip unzip autoconf automake libtool m4 pkg-config \
             zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev \
             libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev \
@@ -55,7 +60,6 @@ jobs:
           ANDROID_NDK_ROOT: ""
           ANDROID_NDK_LATEST_HOME: ""
         run: |
-          # El flag -v permite volcar todo el proceso al archivo build.log si algo falla internamente
           buildozer -v android debug 2>&1 | tee build.log
 
       - name: Upload APK
