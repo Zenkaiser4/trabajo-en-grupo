@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = Calculadora
+title = Mi Espacio Ideal
 
 # (str) Package name
-package.name = calculadora
+package.name = Mi espacio Ideal
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
