@@ -32,7 +32,10 @@ jobs:
           # 2. Forzar a apt a ignorar errores de repositorios externos/caídos
           sudo apt-get update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true || true
           
-          # 3. Instalar dependencias ignorando fallos de paquetes no críticos (--fix-missing)
+          # 3. Solución al bloqueo: Instalar libunwind-dev explícitamente primero
+          sudo apt-get install -y libunwind-dev
+
+          # 4. Instalar dependencias ignorando fallos de paquetes no críticos (--fix-missing)
           sudo apt-get install -y --fix-missing \
             git zip unzip autoconf automake libtool m4 pkg-config \
             zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev \
