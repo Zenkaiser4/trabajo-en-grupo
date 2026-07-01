@@ -2,14 +2,13 @@ import os
 import sys
 import webbrowser
 
-# Configurar el tamaño de la ventana simulando un celular antes de importar Kivy (Solo PC)
-from kivy.config import Config
-Config.set('graphics', 'width', '360')
-Config.set('graphics', 'height', '640')
-Config.set('graphics', 'resizable', False)
-
-# CORRECCIÓN PARA CELULAR: Solo activar angle_sdl2 si estás ejecutando en Windows.
-if sys.platform == "win32":
+# CORRECCIÓN PARA CELULAR: Configurar tamaño de ventana simulada y backend SOLO si estás en PC.
+# En Android, estas líneas provocarían un cierre inmediato (crash) de la aplicación.
+if sys.platform in ["win32", "linux", "darwin"]:
+    from kivy.config import Config
+    Config.set('graphics', 'width', '360')
+    Config.set('graphics', 'height', '640')
+    Config.set('graphics', 'resizable', False)
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 
 from kivymd.app import MDApp
@@ -35,8 +34,9 @@ from kivy.clock import Clock
 from kivy.uix.carousel import Carousel
 from kivy.uix.checkbox import CheckBox
 
-# CORRECCIÓN PARA CELULAR: Se usa plyer para abrir de forma segura la galería nativa de Android/PC
-from plyer import filechooser
+# Herramientas nativas de Kivy para la interfaz
+from kivy.uix.popup import Popup
+from kivy.uix.filechooser import FileChooserListView
 
 
 # --- CLASES BASE PARA BOTONES ---
@@ -866,24 +866,35 @@ class PantallaPerfil(Screen):
 
         self.add_widget(layout_perfil)
 
-    # CORRECCIÓN: Apertura nativa de archivos para Android/PC usando plyer
+    # Selector integrado de Kivy
     def abrir_selector_foto(self, *args):
-        try:
-            filechooser.open_file(
-                title="Selecciona una foto de perfil",
-                filters=[("Imagenes", "*.png", "*.jpg", "*.jpeg")],
-                on_selection=self._on_foto_seleccionada
-            )
-        except Exception as e:
-            print("Error abriendo el selector nativo:", e)
-
-    def _on_foto_seleccionada(self, selection):
-        if selection:
-            ruta_foto = selection[0]
-            self.foto_perfil.imagen.source = ruta_foto  # Cambia la foto del perfil inmediatamente
+        contenido = BoxLayout(orientation='vertical', padding=10, spacing=10)
+        selector = FileChooserListView(filters=['*.png', '*.jpg', '*.jpeg'], path=os.getcwd())
+        contenido.add_widget(selector)
+        
+        btn_box = BoxLayout(size_hint_y=0.15, spacing=10)
+        btn_cancelar = MDRaisedButton(text="Cancelar", md_bg_color="#856C50")
+        btn_seleccionar = MDRaisedButton(text="Seleccionar", md_bg_color="#856C50")
+        
+        btn_box.add_widget(btn_cancelar)
+        btn_box.add_widget(btn_seleccionar)
+        contenido.add_widget(btn_box)
+        
+        popup = Popup(title="Selecciona una imagen", content=contenido, size_hint=(0.95, 0.85))
+        
+        btn_cancelar.bind(on_release=popup.dismiss)
+        
+        def confirmar_seleccion(instance):
+            if selector.selection:
+                ruta_foto = selector.selection[0]
+                self.foto_perfil.imagen.source = ruta_foto  # Cambia la foto del perfil inmediatamente
+                popup.dismiss()
+        
+        btn_seleccionar.bind(on_release=confirmar_seleccion)
+        popup.open()
 
     def guardar_datos(self, instance):
-        dialog = MDDialog(title="Perfil Actualizado", text="Tus datos se guardaron con exito.")
+        dialog = MDDialog(title="Perfil Updated", text="Tus datos se guardaron con exito.")
         dialog.open()
 
 
