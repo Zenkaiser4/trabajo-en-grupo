@@ -19,14 +19,16 @@ source.include_exts = py,png,jpg,kv,atlas
 version = 0.1
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,kivymd,pillow
+# CORREGIDO: Añadidas versiones estables de Kivy y KivyMD para que GitHub no use una rota
+requirements = python3, kivy==2.3.0, kivymd==1.1.1, pillow
 
 # (str) Presplash of the application
-presplash.filename = %(source.dir)s/calcu.png
+# CORREGIDO: Cambiado de calcu.png a tu logo real para que no falle al buscar el archivo
+presplash.filename = %(source.dir)s/logo_msj.png
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/calcu.png
+# CORREGIDO: Cambiado de calcu.png a tu logo real
+icon.filename = %(source.dir)s/logo_msj.png
 
 # (list) Supported orientations
 orientation = portrait
@@ -34,6 +36,10 @@ orientation = portrait
 #
 # Android specific
 #
+
+# (list) Permissions
+# ¡MUY IMPORTANTE!: Permiso para que carguen las imágenes de los productos desde internet
+android.permissions = INTERNET
 
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
