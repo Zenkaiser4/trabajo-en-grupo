@@ -50,21 +50,35 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install buildozer "Cython<3.0" virtualenv pycparser
 
-      - name: Create Buildozer Config Cache Directory
-        run: mkdir -p ~/.buildozer
+      # --- OPTIMIZACIÓN: Sistema de Caché para Buildozer ---
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-buildozer-
 
-      - name: Accept Android SDK Licenses
-        run: |
-          yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+      - name: Cache Android SDK/NDK downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.android
+          key: ${{ runner.os }}-android-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            ${{ runner.os }}-android-
 
-      - name: Build APK
+      # --- CORRECCIÓN: Aceptar licencias de manera automática mediante Buildozer ---
+      - name: Build APK (Auto-accepting licenses)
         env:
+          # Desvincular NDKs preinstalados de GitHub que rompen el proceso de Buildozer
           ANDROID_NDK_HOME: ""
           ANDROID_NDK_ROOT: ""
           ANDROID_NDK_LATEST_HOME: ""
         run: |
-          buildozer -v android debug 2>&1 | tee build.log
+          # Al pasar "yes" por tubería a buildozer, aceptará los términos del SDK cuando aparezcan en la consola
+          yes | buildozer -v android debug 2>&1 | tee build.log
 
+       Tarjeta de subida de resultados en caso de éxito
       - name: Upload APK
         if: success()
         uses: actions/upload-artifact@v4
@@ -73,6 +87,7 @@ jobs:
           path: bin/*.apk
           if-no-files-found: error
 
+      # Tarjeta de subida de registros en caso de fallo
       - name: Upload Build Logs
         if: failure()
         uses: actions/upload-artifact@v4
