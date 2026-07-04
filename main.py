@@ -4,15 +4,11 @@ from kivy.utils import platform
 
 # --- CONFIGURACIÓN GRÁFICA INTELIGENTE ---
 if platform == 'win':
-    # Esto SOLO se ejecuta en tu computadora (Windows) para simular el celular
     from kivy.config import Config
     Config.set('graphics', 'width', '360')
     Config.set('graphics', 'height', '640')
     Config.set('graphics', 'resizable', False)
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
-else:
-    # En Android, se salta esta configuración para usar los gráficos nativos a pantalla completa
-    pass
 
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -38,9 +34,11 @@ from kivy.clock import Clock
 from kivy.uix.carousel import Carousel
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.popup import Popup
-from kivy.uix.filechooser import FileChooserListView
 
-URL_NUEVO_LOGO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logo_msj.png")
+# Importamos plyer para abrir la galería o explorador nativo
+from plyer import filechooser
+
+URL_NUEVO_LOGO = "logo_msj.png"
 
 # --- CLASES BASE PARA BOTONES ---
 class LabelClickable(ButtonBehavior, Label):
@@ -205,13 +203,12 @@ class PantallaDetalleProducto(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pantalla_anterior = 'principal'
-        self.canvas_bg = None
         self.cantidad = 1
 
         layout_principal = BoxLayout(orientation="vertical")
 
         self.barra_superior = MDTopAppBar(title="Detalle del Producto", elevation=3, size_hint_y=0.10, md_bg_color="#856C50")
-        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar()]]
+        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar(), "Regresar"]]
         layout_principal.add_widget(self.barra_superior)
 
         scroll_contenido = ScrollView(size_hint=(1, 0.90))
@@ -374,6 +371,10 @@ class PantallaLogin(Screen):
         layout.add_widget(self.lbl_resultado)
 
         self.add_widget(layout)
+
+
+class PantallaTransition(Screen):
+    pass
 
 
 class PantallaRegistro(Screen):
@@ -580,8 +581,6 @@ class Principal(Screen):
         for i in range(0, len(prods), 3):
             fila = BoxLayout(orientation='horizontal', spacing=10, padding=[5, 0, 5, 0])
             grupo = prods[i:i+3]
-            for p in grupo: # Corregido error tipográfico latente de grupo
-                pass
             for p in grupo:
                 fila.add_widget(ProductCard(p["url"], p["nombre"]))
             for _ in range(3 - len(grupo)):
@@ -596,7 +595,7 @@ class Principal(Screen):
         if nombre_boton == "Perfil":
             self.manager.current = 'perfil'
         elif nombre_boton == "Categorias":
-            self.manager.current = 'categorias'
+            self.manager.current = 'categories'
         elif nombre_boton == "Favoritos":
             self.manager.current = 'favoritos'
         elif nombre_boton == "Carrito":
@@ -831,7 +830,7 @@ class PantallaCarrito(Screen):
             self.contenedor_datos_pago.add_widget(self.txt_num_tarjeta)
             self.contenedor_datos_pago.add_widget(box_horizontal)
         elif metodo == "Transferencia Bancaria":
-            self.contenedor_datos_pago.height = 230
+            self.contenedor_datos_pago.height = 190
             self.ruta_comprobante = None
 
             lbl_datos_banco = MDLabel(
@@ -851,7 +850,7 @@ class PantallaCarrito(Screen):
             self.contenedor_datos_pago.add_widget(lbl_datos_banco)
 
             btn_subir_comprobante = MDRaisedButton(
-                text="Subir comprobante de pago",
+                text="Abrir Galería / Archivos",
                 md_bg_color="#856C50",
                 size_hint_x=1,
                 size_hint_y=None,
@@ -876,30 +875,16 @@ class PantallaCarrito(Screen):
             self.contenedor_datos_pago.add_widget(self.txt_cantidad)
 
     def abrir_selector_comprobante(self, *args):
-        contenido = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        selector = FileChooserListView(filters=['*.png', '*.jpg', '*.jpeg'], path=os.getcwd())
-        contenido.add_widget(selector)
+        filechooser.open_file(
+            title="Selecciona el comprobante de pago",
+            filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")],
+            on_selection=self._comprobante_seleccionado
+        )
 
-        btn_box = BoxLayout(size_hint_y=0.15, spacing=10)
-        btn_cancelar = MDRaisedButton(text="Cancelar", md_bg_color="#856C50")
-        btn_seleccionar = MDRaisedButton(text="Seleccionar", md_bg_color="#856C50")
-
-        btn_box.add_widget(btn_cancelar)
-        btn_box.add_widget(btn_seleccionar)
-        contenido.add_widget(btn_box)
-
-        popup = Popup(title="Selecciona el comprobante de pago", content=contenido, size_hint=(0.95, 0.85))
-        btn_cancelar.bind(on_release=popup.dismiss)
-
-        def confirmar_seleccion(instance):
-            if selector.selection:
-                ruta_archivo = selector.selection[0]
-                self.ruta_comprobante = ruta_archivo
-                self.lbl_comprobante.text = f"Comprobante: {os.path.basename(ruta_archivo)}"
-                popup.dismiss()
-
-        btn_seleccionar.bind(on_release=confirmar_seleccion)
-        popup.open()
+    def _comprobante_seleccionado(self, selection):
+        if selection:
+            self.ruta_comprobante = selection[0]
+            self.lbl_comprobante.text = f"Comprobante: {os.path.basename(self.ruta_comprobante)}"
 
     def procesar_pedido(self, instance):
         if self.metodo_pago == "":
@@ -1015,29 +1000,15 @@ class PantallaPerfil(Screen):
         self.add_widget(layout_perfil)
 
     def abrir_selector_foto(self, *args):
-        contenido = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        selector = FileChooserListView(filters=['*.png', '*.jpg', '*.jpeg'], path=os.getcwd())
-        contenido.add_widget(selector)
-        
-        btn_box = BoxLayout(size_hint_y=0.15, spacing=10)
-        btn_cancelar = MDRaisedButton(text="Cancelar", md_bg_color="#856C50")
-        btn_seleccionar = MDRaisedButton(text="Seleccionar", md_bg_color="#856C50")
-        
-        btn_box.add_widget(btn_cancelar)
-        btn_box.add_widget(btn_seleccionar)
-        contenido.add_widget(btn_box)
-        
-        popup = Popup(title="Selecciona una imagen", content=contenido, size_hint=(0.95, 0.85))
-        btn_cancelar.bind(on_release=popup.dismiss)
-        
-        def confirmar_seleccion(instance):
-            if selector.selection:
-                ruta_foto = selector.selection[0]
-                self.foto_perfil.imagen.source = ruta_foto 
-                popup.dismiss()
-        
-        btn_seleccionar.bind(on_release=confirmar_seleccion)
-        popup.open()
+        filechooser.open_file(
+            title="Selecciona una imagen",
+            filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")],
+            on_selection=self._foto_seleccionada
+        )
+
+    def _foto_seleccionada(self, selection):
+        if selection:
+            self.foto_perfil.imagen.source = selection[0]
 
     def guardar_datos(self, instance):
         dialog = MDDialog(title="Perfil Actualizado", text="Tus datos se guardaron con exito.")
@@ -1108,7 +1079,7 @@ class PantallaAdminInventario(Screen):
         layout_principal = BoxLayout(orientation="vertical")
         
         self.barra_superior = MDTopAppBar(title="Inventario", elevation=3, md_bg_color="#856C50")
-        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar()]]
+        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar(), "Regresar"]]
         layout_principal.add_widget(self.barra_superior)
         
         scroll = ScrollView()
@@ -1295,7 +1266,7 @@ class MiApp(MDApp):
         # Pantallas de Cliente
         SC.add_widget(Principal(name='principal'))
         SC.add_widget(PantallaDetalleProducto(name='detalle_producto'))
-        SC.add_widget(PantallaCategorias(name='categorias'))
+        SC.add_widget(PantallaCategorias(name='categories'))
         SC.add_widget(Favoritos(name='favoritos'))
         SC.add_widget(PantallaCarrito(name='carrito'))
         SC.add_widget(PantallaPerfil(name='perfil'))
