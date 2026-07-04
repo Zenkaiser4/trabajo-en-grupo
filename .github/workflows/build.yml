@@ -1,4 +1,4 @@
-name: CI
+name: Build Android APK
 
 on:
   push:
@@ -32,10 +32,10 @@ jobs:
           # 2. Forzar a apt a ignorar errores de repositorios externos/caídos
           sudo apt-get update -o Acquire::AllowInsecureRepositories=true -o Acquire::AllowDowngradeToInsecureRepositories=true || true
           
-          # 3. Solución al bloqueo: Instalar libunwind-dev explícitamente primero
+          # 3. Solución al bloqueo de Ubuntu: Instalar libunwind-dev explícitamente primero
           sudo apt-get install -y libunwind-dev
 
-          # 4. Instalar dependencias ignorando fallos de paquetes no críticos (--fix-missing)
+          # 4. Instalar todas las dependencias necesarias de Kivy/Buildozer
           sudo apt-get install -y --fix-missing \
             git zip unzip autoconf automake libtool m4 pkg-config \
             zlib1g-dev libncurses5-dev libgdbm-dev libssl-dev \
@@ -45,12 +45,12 @@ jobs:
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
             libjpeg-dev
 
-      - name: Install Buildozer and Dependencies
+      - name: Install Buildozer and Python Dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install buildozer "Cython<3.0" virtualenv pycparser
 
-      # --- OPTIMIZACIÓN: Sistema de Caché para Buildozer ---
+      # --- SISTEMA DE CACHÉ (Para que las siguientes compilaciones tarden solo 3-5 minutos) ---
       - name: Cache Buildozer global directory
         uses: actions/cache@v4
         with:
@@ -67,28 +67,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-
 
-      # --- CORRECCIÓN: Aceptar licencias de manera automática mediante Buildozer ---
+      # --- COMPILACIÓN DEL APK (Aceptando licencias automáticamente) ---
       - name: Build APK (Auto-accepting licenses)
         env:
-          # Desvincular NDKs preinstalados de GitHub que rompen el proceso de Buildozer
+          # Evita conflictos con NDKs preinstalados en GitHub Actions
           ANDROID_NDK_HOME: ""
           ANDROID_NDK_ROOT: ""
           ANDROID_NDK_LATEST_HOME: ""
         run: |
-          # Al pasar "yes" por tubería a buildozer, aceptará los términos del SDK cuando aparezcan en la consola
+          # 'yes |' responde automáticamente "y" (sí) a todas las licencias de Android que Buildozer descargue
           yes | buildozer -v android debug 2>&1 | tee build.log
 
-       Tarjeta de subida de resultados en caso de éxito
-      - name: Upload APK
+      # Guardar el APK generado si todo sale bien (lo descargas desde la web de GitHub)
+      - name: Upload APK Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: apk
+          name: apk-digital
           path: bin/*.apk
           if-no-files-found: error
 
-      # Tarjeta de subida de registros en caso de fallo
-      - name: Upload Build Logs
+      # Guardar los registros/logs de error si la compilación falla para saber qué pasó
+      - name: Upload Build Logs on Failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
