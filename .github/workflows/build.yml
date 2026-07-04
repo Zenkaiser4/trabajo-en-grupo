@@ -50,7 +50,7 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install buildozer "Cython<3.0" virtualenv pycparser
 
-      # --- SISTEMA DE CACHÉ (Para que las siguientes compilaciones tarden solo 3-5 minutos) ---
+      # --- SISTEMA DE CACHÉ (Acelera compilaciones futuras) ---
       - name: Cache Buildozer global directory
         uses: actions/cache@v4
         with:
@@ -67,7 +67,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-
 
-      # --- COMPILACIÓN DEL APK (Aceptando licencias automáticamente) ---
+      # --- COMPILACIÓN DEL APK (Aceptando licencias automáticamente y reduciendo RAM) ---
       - name: Build APK (Auto-accepting licenses)
         env:
           # Evita conflictos con NDKs preinstalados en GitHub Actions
@@ -75,10 +75,14 @@ jobs:
           ANDROID_NDK_ROOT: ""
           ANDROID_NDK_LATEST_HOME: ""
         run: |
-          # 'yes |' responde automáticamente "y" (sí) a todas las licencias de Android que Buildozer descargue
+          # Limitar la compilación a 1 solo hilo para no agotar los 7GB de RAM de GitHub
+          export JOBS=1
+          export MAKEFLAGS="-j1"
+          
+          # 'yes |' responde automáticamente "y" a las licencias de Android
           yes | buildozer -v android debug 2>&1 | tee build.log
 
-      # Guardar el APK generado si todo sale bien (lo descargas desde la web de GitHub)
+      # Guardar el APK generado si todo sale bien
       - name: Upload APK Artifact
         if: success()
         uses: actions/upload-artifact@v4
@@ -87,7 +91,7 @@ jobs:
           path: bin/*.apk
           if-no-files-found: error
 
-      # Guardar los registros/logs de error si la compilación falla para saber qué pasó
+      # Guardar los registros/logs de error si la compilación falla
       - name: Upload Build Logs on Failure
         if: failure()
         uses: actions/upload-artifact@v4
