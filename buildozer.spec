@@ -3,74 +3,73 @@
 # (str) Title of your application
 title = Mi Espacio Ideal
 
-# (str) Package name (CORREGIDO: Sin espacios y en minúsculas para evitar el fallo de compilación)
-package.name = mi_espacio_ideal
+# (str) Package name
+package.name = miespacioideal
 
-# (str) Package domain (needed for android/ios packaging)
-package.domain = org.test
+# (str) Package domain (needed for android packaging)
+package.domain = org.regalos
 
-# (str) Source code where the main.py live
+# (str) Source code where the main.py lives
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas
+source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 1.0.0
 
 # (list) Application requirements
-# CORREGIDO: Añadidas versiones estables de Kivy y KivyMD para que GitHub no use una rota
-requirements = python3, kivy==2.3.0, kivymd==1.1.1, pillow
+# NOTA: Se incluye pillow para manejo de imágenes y las versiones exactas estables de Kivy y KivyMD
+requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi
 
-# (str) Presplash of the application
-# CORREGIDO: Cambiado de calcu.png a tu logo real para que no falle al buscar el archivo
-presplash.filename = %(source.dir)s/logo_msj.png
-
-# (str) Icon of the application
-# CORREGIDO: Cambiado de calcu.png a tu logo real
-icon.filename = %(source.dir)s/logo_msj.png
-
-# (list) Supported orientations
+# (str) Supported orientations (landscape, portrait or all)
 orientation = portrait
-
-#
-# Android specific
-#
-
-# (list) Permissions
-# ¡MUY IMPORTANTE!: Permiso para que carguen las imágenes de los productos desde internet
-android.permissions = INTERNET
 
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
 
-# (int) Target Android API, should be as high as possible.
-android.api = 33
+# =============================================================================
+# Android specific configuration
+# =============================================================================
 
-# (int) Minimum API your APK / AAB will support.
-android.minapi = 24
+# (list) Permissions
+# NOTA: Crucial para que funcionen las imágenes por URL externas y enlaces web
+android.permissions = INTERNET
+
+# (int) Target Android API, should be as high as possible.
+android.api = 34
+
+# (int) Minimum API your APK will support.
+android.minapi = 21
 
 # (str) Android NDK version to use
-android.ndk = 25c
+android.ndk = 26b
 
-# (int) Android NDK API to use.
-android.ndk_api = 24
+# (bool) If True, then skip trying to update the Android sdk
+# This can be useful to avoid any auto-updates when compilation is stable
+android.skip_update = False
 
 # (bool) If True, then automatically accept SDK license
+# agreements. This is intended for automation only.
 android.accept_sdk_license = True
 
-# (bool) Enable AndroidX support. (RECOMENDADO: Activado para compatibilidad con librerías modernas de Python/Android)
-android.enable_androidx = True
+# (str) Android architecture to build for.
+# CRÍTICO: Dejamos SOLAMENTE arm64-v8a para evitar que GitHub Actions trabaje doble
+# y se quede sin memoria RAM compilando otras arquitecturas pesadas.
+android.archs = arm64-v8a
 
-# (bool) Copy library instead of making a libpymodules.so
-android.copy_libs = 1
+# (list) The Android architectures for which to build the NDK libs
+# android.ndk_architectures = arm64-v8a
 
-# (list) The Android archs to build for
-android.archs = arm64-v8a, armeabi-v7a
+# (bool) Use --private data storage (True) or --dir public storage (False)
+android.private_storage = True
 
-# (bool) enables Android auto backup feature
-android.allow_backup = True
+# (str) Type of builds to run (debug or release)
+android.build_mode = debug
 
+# =============================================================================
+# Buildozer sections
+# =============================================================================
 
 [buildozer]
 
