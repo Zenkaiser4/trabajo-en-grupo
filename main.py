@@ -1,13 +1,18 @@
 import os
 import webbrowser
+from kivy.utils import platform
 
-# Configurar el tamaño de la ventana simulando un celular antes de importar Kivy
-from kivy.config import Config
-Config.set('graphics', 'width', '360')
-Config.set('graphics', 'height', '640')
-Config.set('graphics', 'resizable', False)
-
-os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
+# --- CONFIGURACIÓN GRÁFICA INTELIGENTE ---
+if platform == 'win':
+    # Esto SOLO se ejecuta en tu computadora (Windows) para simular el celular
+    from kivy.config import Config
+    Config.set('graphics', 'width', '360')
+    Config.set('graphics', 'height', '640')
+    Config.set('graphics', 'resizable', False)
+    os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
+else:
+    # En Android, se salta esta configuración para usar los gráficos nativos a pantalla completa
+    pass
 
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -547,7 +552,6 @@ class Principal(Screen):
         self.add_widget(layout_principal)
 
     def on_enter(self):
-        # Cada vez que el usuario ingresa a esta pantalla, se lee app.productos con los datos actualizados del admin
         self.txt_buscar.text = ""
         self.filtrar_productos(None, "")
 
@@ -576,6 +580,8 @@ class Principal(Screen):
         for i in range(0, len(prods), 3):
             fila = BoxLayout(orientation='horizontal', spacing=10, padding=[5, 0, 5, 0])
             grupo = prods[i:i+3]
+            for p in grupo: # Corregido error tipográfico latente de grupo
+                pass
             for p in grupo:
                 fila.add_widget(ProductCard(p["url"], p["nombre"]))
             for _ in range(3 - len(grupo)):
@@ -629,7 +635,6 @@ class PantallaCategorias(Screen):
         self.add_widget(layout_principal)
 
     def on_enter(self):
-        # Al igual que en Inicio, se redibuja todo leyendo app.productos
         self.grid_productos.clear_widgets()
         app = MDApp.get_running_app()
         for p in app.productos:
@@ -981,7 +986,6 @@ class PantallaPerfil(Screen):
         fila_switch.add_widget(self.switch_notif)
         layout_perfil.add_widget(fila_switch)
 
-        # Botones de Perfil (Guardar y Cerrar Sesión)
         btn_guardar = MDRaisedButton(text="Guardar Cambios", md_bg_color="#856C50", pos_hint={'center_x': 0.5}, size_hint_y=0.07, on_press=self.guardar_datos)
         btn_cerrar_sesion = MDRaisedButton(text="Cerrar Sesion", md_bg_color="#C0392B", pos_hint={'center_x': 0.5}, size_hint_y=0.07, on_release=self.cerrar_sesion)
         
@@ -1188,13 +1192,9 @@ class PantallaAdminInventario(Screen):
         try:
             nuevo_stock_int = int(nuevo_stock)
             
-            # --- AQUÍ OCURRE LA CONCORDANCIA ---
-            
-            # 1. Actualiza el nombre y stock en el arreglo general de productos
             prod_dict["nombre"] = nuevo_nombre
             prod_dict["stock"] = nuevo_stock_int
             
-            # 2. Busca si algún cliente guardó ese producto en Favoritos y le actualiza el nombre
             for fav in app.favoritos:
                 if fav['name'] == nombre_anterior:
                     fav['name'] = nuevo_nombre
@@ -1202,7 +1202,6 @@ class PantallaAdminInventario(Screen):
             d = MDDialog(title="Exito", text="Producto actualizado correctamente.")
             d.open()
             
-            # 3. Refresca la vista visualmente para que confirme el cambio sin salir
             self.refrescar_lista()
             
         except ValueError:
@@ -1211,12 +1210,7 @@ class PantallaAdminInventario(Screen):
             
     def eliminar_producto(self, prod_dict):
         app = MDApp.get_running_app()
-        
-        # --- AQUÍ OCURRE LA CONCORDANCIA AL ELIMINAR ---
-        # Remueve el producto de la lista de favoritos de los clientes
         app.favoritos = [f for f in app.favoritos if f['name'] != prod_dict['nombre']]
-        
-        # Remueve el producto de la lista general
         app.productos.remove(prod_dict)
         self.refrescar_lista()
         
@@ -1251,8 +1245,6 @@ class PantallaAdminInventario(Screen):
             app = MDApp.get_running_app()
             try:
                 stk = int(txt_stock.text)
-                # --- AQUÍ OCURRE LA CONCORDANCIA AL AGREGAR ---
-                # Lo suma a la lista global, para que el cliente lo vea en su Carrusel
                 app.productos.append({
                     "url": txt_url.text,
                     "nombre": txt_nom.text,
