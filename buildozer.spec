@@ -16,12 +16,12 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-# Se cambia a 1.0.1 para obligar a GitHub Actions a romper la caché vieja si existe
-version = 1.0.1
+# Se cambia a 1.0.2 para obligar a GitHub Actions a ignorar la caché corrupta anterior
+version = 1.0.2
 
 # (list) Application requirements
-# CRÍTICO: Se añade openssl y requests para que funcionen los enlaces HTTPS de las imágenes
-requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests
+# CORREGIDO: Se añade 'plyer' al final para que la app no se rompa al buscar el selector de archivos
+requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests, plyer
 
 # (str) Supported orientations (landscape, portrait or all)
 orientation = portrait
