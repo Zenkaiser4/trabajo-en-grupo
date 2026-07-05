@@ -16,11 +16,12 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-version = 1.0.0
+# Se cambia a 1.0.1 para obligar a GitHub Actions a romper la caché vieja si existe
+version = 1.0.1
 
 # (list) Application requirements
-# NOTA: Se incluye pillow para manejo de imágenes y las versiones exactas estables de Kivy y KivyMD
-requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi
+# CRÍTICO: Se añade openssl y requests para que funcionen los enlaces HTTPS de las imágenes
+requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests
 
 # (str) Supported orientations (landscape, portrait or all)
 orientation = portrait
@@ -33,7 +34,7 @@ fullscreen = 0
 # =============================================================================
 
 # (list) Permissions
-# NOTA: Crucial para que funcionen las imágenes por URL externas y enlaces web
+# CRÍTICO: Permiso de internet para descargar el catálogo de imágenes externas
 android.permissions = INTERNET
 
 # (int) Target Android API, should be as high as possible.
@@ -46,20 +47,14 @@ android.minapi = 21
 android.ndk = 26b
 
 # (bool) If True, then skip trying to update the Android sdk
-# This can be useful to avoid any auto-updates when compilation is stable
 android.skip_update = False
 
-# (bool) If True, then automatically accept SDK license
-# agreements. This is intended for automation only.
+# (bool) If True, then automatically accept SDK license agreements.
 android.accept_sdk_license = True
 
 # (str) Android architecture to build for.
-# CRÍTICO: Dejamos SOLAMENTE arm64-v8a para evitar que GitHub Actions trabaje doble
-# y se quede sin memoria RAM compilando otras arquitecturas pesadas.
+# Mantenemos únicamente arm64-v8a para evitar que GitHub Actions se quede sin RAM o tiempo límite
 android.archs = arm64-v8a
-
-# (list) The Android architectures for which to build the NDK libs
-# android.ndk_architectures = arm64-v8a
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
 android.private_storage = True
