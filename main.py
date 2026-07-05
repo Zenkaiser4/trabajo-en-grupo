@@ -2,13 +2,21 @@ import os
 import webbrowser
 from kivy.utils import platform
 
-# --- CONFIGURACIÓN GRÁFICA INTELIGENTE ---
+# --- CONFIGURACIÓN GRÁFICA INTELIGENTE Y SOLUCIÓN SSL ---
 if platform == 'win':
+    # Esto SOLO se ejecuta en tu computadora (Windows) para simular el celular
     from kivy.config import Config
     Config.set('graphics', 'width', '360')
     Config.set('graphics', 'height', '640')
     Config.set('graphics', 'resizable', False)
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
+elif platform == 'android':
+    # Forzar la configuración de certificados SSL nativos para evitar crashes con HTTPS en AsyncImage
+    try:
+        import certifi
+        os.environ['SSL_CERT_FILE'] = certifi.where()
+    except Exception:
+        pass
 
 from kivymd.app import MDApp
 from kivy.uix.screenmanager import Screen, ScreenManager
@@ -38,6 +46,7 @@ from kivy.uix.popup import Popup
 # Importamos plyer para abrir la galería o explorador nativo
 from plyer import filechooser
 
+# CRÍTICO: Debe existir este archivo de imagen en tu repositorio de GitHub junto a este main.py
 URL_NUEVO_LOGO = "logo_msj.png"
 
 # --- CLASES BASE PARA BOTONES ---
@@ -178,16 +187,16 @@ class ProductCard(ButtonBehavior, BoxLayout):
         if app.root.current == 'favoritos':
             app.root.get_screen('favoritos').on_enter()
 
-    def _update_cards_in_widget(self, widget, favoritos_list):
+    def _update_cards_in_widget(self, widget, favorites_list):
         if isinstance(widget, ProductCard):
-            if any(f['name'] == widget.product_name for f in favoritos_list):
+            if any(f['name'] == widget.product_name for f in favorites_list):
                 widget.btn_corazon.icon = "heart"
             else:
                 widget.btn_corazon.icon = "heart-outline"
         
         if hasattr(widget, 'children'):
             for child in widget.children:
-                self._update_cards_in_widget(child, favoritos_list)
+                self._update_cards_in_widget(child, favorites_list)
 
     def on_release(self):
         app = MDApp.get_running_app()
@@ -203,12 +212,13 @@ class PantallaDetalleProducto(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pantalla_anterior = 'principal'
+        self.canvas_bg = None
         self.cantidad = 1
 
         layout_principal = BoxLayout(orientation="vertical")
 
         self.barra_superior = MDTopAppBar(title="Detalle del Producto", elevation=3, size_hint_y=0.10, md_bg_color="#856C50")
-        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar(), "Regresar"]]
+        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar()]]
         layout_principal.add_widget(self.barra_superior)
 
         scroll_contenido = ScrollView(size_hint=(1, 0.90))
@@ -371,10 +381,6 @@ class PantallaLogin(Screen):
         layout.add_widget(self.lbl_resultado)
 
         self.add_widget(layout)
-
-
-class PantallaTransition(Screen):
-    pass
 
 
 class PantallaRegistro(Screen):
@@ -1079,7 +1085,7 @@ class PantallaAdminInventario(Screen):
         layout_principal = BoxLayout(orientation="vertical")
         
         self.barra_superior = MDTopAppBar(title="Inventario", elevation=3, md_bg_color="#856C50")
-        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar(), "Regresar"]]
+        self.barra_superior.left_action_items = [["arrow-left", lambda x: self.regresar()]]
         layout_principal.add_widget(self.barra_superior)
         
         scroll = ScrollView()
@@ -1235,7 +1241,7 @@ class PantallaAdminInventario(Screen):
         self.manager.current = "admin_principal"
 
 
-# --- MANEJO DE LA APLICACIÓN ---
+# --- ENTRADA DE LA APLICACIÓN ---
 class MiApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
