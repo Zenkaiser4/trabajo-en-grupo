@@ -434,7 +434,7 @@ class PantallaRegistro(Screen):
         Clock.schedule_once(lambda dt: self.volver_login(None), 1.5)
 
 
-# --- PANTALLA PRINCIPAL (2 EN 2 ESPACIADO) ---
+# --- PANTALLA PRINCIPAL ---
 class Principal(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -567,9 +567,9 @@ class Principal(Screen):
         for i in range(0, len(prods), 2):
             fila = BoxLayout(orientation='horizontal', spacing=14, padding=[8, 2, 8, 2])
             grupo = prods[i:i+2]
-            for p in grupo:
+            for p in group := grupo:
                 fila.add_widget(ProductCard(p["url"], p["nombre"]))
-            for _ in range(2 - len(grupo)):
+            for _ in range(2 - len(group)):
                 fila.add_widget(Label(size_hint_x=0.5))
             self.mi_carousel.add_widget(fila)
 
@@ -679,7 +679,7 @@ class Favoritos(Screen):
                 self.grid.add_widget(prod)
 
 
-# --- CARRITO (MENÚ VISIBLE Y ESPACIADO COMPLETO) ---
+# --- CARRITO ---
 class PantallaCarrito(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
