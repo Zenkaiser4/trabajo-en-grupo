@@ -67,23 +67,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-v2-
 
-      # --- COMPILACIÓN DEL APK (Aceptando licencias de forma nativa) ---
+      # --- COMPILACIÓN DEL APK CON CAPTURA ESTABLE DE LOGS ---
       - name: Build APK
         env:
-          # Evita conflictos con NDKs preinstalados en GitHub Actions
+          # Evita conflictos con NDKs y SDKs preinstalados en el entorno de GitHub
           ANDROID_NDK_HOME: ""
           ANDROID_NDK_ROOT: ""
           ANDROID_NDK_LATEST_HOME: ""
         run: |
-          # Limitar la compilación a 1 solo hilo para no agotar los 7GB de RAM de GitHub
+          # Limitar la compilación a 1 solo hilo para cuidar los 7GB de RAM del servidor
           export JOBS=1
           export MAKEFLAGS="-j1"
           
-          # Aceptación de licencias de manera formal y silenciosa mediante el comando nativo de Buildozer
-          buildozer android licenses
+          # Forzar la creación del archivo de registro antes de iniciar para evitar "No files found"
+          touch build.log
           
-          # Ejecución directa de la compilación
-          buildozer -v android debug 2>&1 | tee build.log
+          # Ejecutar buildozer y volcar absolutamente toda la salida en tiempo real al archivo
+          buildozer -v android debug > build.log 2>&1
 
       # --- CORRECCIÓN DE RUTA DE ARTEFACTO (Búsqueda profunda recursiva) ---
       - name: Upload APK Artifact
