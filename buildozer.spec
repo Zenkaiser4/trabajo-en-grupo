@@ -16,11 +16,10 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-# Se cambia a 1.0.4 para forzar una reconstrucción limpia en la caché de GitHub Actions
-version = 1.0.4
+# Se cambia a 1.0.5 para forzar una reconstrucción limpia e ignorar residuos del error anterior
+version = 1.0.5
 
 # (list) Application requirements
-# Incluye Kivy, KivyMD, Pillow para imágenes y Plyer para interactuar con la galería/archivos del sistema.
 requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests, plyer
 
 # (str) Supported orientations (landscape, portrait or all)
@@ -35,7 +34,6 @@ fullscreen = 0
 # =============================================================================
 
 # (list) Permissions
-# INTERNET es crítico para el catálogo de imágenes y READ_EXTERNAL_STORAGE para buscar comprobantes.
 android.permissions = INTERNET, READ_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
@@ -54,7 +52,6 @@ android.skip_update = False
 android.accept_sdk_license = True
 
 # (str) Android architecture to build for.
-# Compilar solo para arm64-v8a optimiza el uso de RAM en las máquinas de GitHub y cubre la mayoría de teléfonos modernos.
 android.archs = arm64-v8a
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
