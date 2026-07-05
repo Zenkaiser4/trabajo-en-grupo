@@ -50,22 +50,22 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           pip install buildozer "Cython<3.0" virtualenv pycparser
 
-      # --- SISTEMA DE CACHÉ (Acelera compilaciones futuras) ---
+      # --- SISTEMA DE CACHÉ (Forzado v2 para obligar a reconstruir con Plyer) ---
       - name: Cache Buildozer global directory
         uses: actions/cache@v4
         with:
           path: ~/.buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-buildozer-v2-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-buildozer-
+            ${{ runner.os }}-buildozer-v2-
 
       - name: Cache Android SDK/NDK downloads
         uses: actions/cache@v4
         with:
           path: ~/.android
-          key: ${{ runner.os }}-android-${{ hashFiles('buildozer.spec') }}
+          key: ${{ runner.os }}-android-v2-${{ hashFiles('buildozer.spec') }}
           restore-keys: |
-            ${{ runner.os }}-android-
+            ${{ runner.os }}-android-v2-
 
       # --- COMPILACIÓN DEL APK (Aceptando licencias automáticamente y reduciendo RAM) ---
       - name: Build APK (Auto-accepting licenses)
