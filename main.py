@@ -4,14 +4,12 @@ from kivy.utils import platform
 
 # --- CONFIGURACIÓN GRÁFICA INTELIGENTE Y SOLUCIÓN SSL ---
 if platform == 'win':
-    # Esto SOLO se ejecuta en tu computadora (Windows) para simular el celular
     from kivy.config import Config
     Config.set('graphics', 'width', '360')
     Config.set('graphics', 'height', '640')
     Config.set('graphics', 'resizable', False)
     os.environ['KIVY_GL_BACKEND'] = 'angle_sdl2'
 elif platform == 'android':
-    # Forzar la configuración de certificados SSL nativos para evitar crashes con HTTPS en AsyncImage
     try:
         import certifi
         os.environ['SSL_CERT_FILE'] = certifi.where()
@@ -42,14 +40,10 @@ from kivy.clock import Clock
 from kivy.uix.carousel import Carousel
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.popup import Popup
-
-# Importamos plyer para abrir la galería o explorador nativo
 from plyer import filechooser
 
-# CRÍTICO: Debe existir este archivo de imagen en tu repositorio de GitHub junto a este main.py
 URL_NUEVO_LOGO = "logo_msj.png"
 
-# --- CLASES BASE PARA BOTONES ---
 class LabelClickable(ButtonBehavior, Label):
     pass
 
@@ -58,7 +52,7 @@ class BotonBarra(ButtonBehavior, BoxLayout):
         super().__init__(**kwargs)
         self.orientation = "vertical"
 
-# --- COMPONENTE DE LOGO REDONDO CON MÁSCARA CIRCULAR REAL ---
+# --- COMPONENTE DE LOGO REDONDO ---
 class LogoRedondoCircular(BoxLayout):
     def __init__(self, source_url, size_pixels=60, **kwargs):
         super().__init__(**kwargs)
@@ -107,26 +101,26 @@ class LogoRedondoCircular(BoxLayout):
         self._angulo = (self._angulo + velocidad) % 360
         self.rotacion.angle = self._angulo
 
-# --- COMPONENTE DE TARJETA DE PRODUCTO (CLICABLE) ---
+# --- TARJETA DE PRODUCTO OPTIMIZADA (2 POR FILA) ---
 class ProductCard(ButtonBehavior, BoxLayout):
     def __init__(self, image_url, product_name, **kwargs):
         super().__init__(**kwargs)
         self.image_url = image_url
         self.product_name = product_name
         self.orientation = 'vertical'
-        self.padding = 6
-        self.spacing = 4
-        self.size_hint_x = 0.33
+        self.padding = 8
+        self.spacing = 6
+        self.size_hint_x = 0.5
 
         with self.canvas.before:
             Color(1, 1, 1, 1)
             self.rect = Rectangle(size=self.size, pos=self.pos)
-            Color(0.52, 0.42, 0.31, 1)
+            Color(0.85, 0.80, 0.75, 1)
             self.border = Line(rectangle=(self.x, self.y, self.width, self.height), width=1.5)
 
         self.bind(size=self._update_canvas, pos=self._update_canvas)
 
-        self.foto_layout = AnchorLayout(anchor_x='right', anchor_y='top', size_hint_y=0.82)
+        self.foto_layout = AnchorLayout(anchor_x='right', anchor_y='top', size_hint_y=0.75)
         
         self.foto = AsyncImage(
             source=image_url,
@@ -138,7 +132,7 @@ class ProductCard(ButtonBehavior, BoxLayout):
             icon="heart-outline",
             theme_icon_color="Custom",
             icon_color=(0.8, 0.1, 0.1, 1),
-            icon_size="28sp",
+            icon_size="24sp",
         )
         app = MDApp.get_running_app()
         if app and hasattr(app, 'favoritos') and any(f['name'] == self.product_name for f in app.favoritos):
@@ -146,19 +140,18 @@ class ProductCard(ButtonBehavior, BoxLayout):
 
         self.foto_layout.add_widget(self.foto)
         self.foto_layout.add_widget(self.btn_corazon)
-        
         self.add_widget(self.foto_layout)
 
         self.nombre_label = Label(
             text=product_name,
-            color=(0.75, 0.15, 0.05, 1),
-            size_hint_y=0.18,
-            font_size='15sp',
+            color=(0.3, 0.2, 0.1, 1),
+            size_hint_y=0.25,
+            font_size='14sp',
             bold=True,
             halign='center',
-            text_size=(self.width, None)
+            valign='middle'
         )
-        self.nombre_label.bind(size=lambda inst, val: setattr(inst, 'text_size', (val[0], None)))
+        self.nombre_label.bind(size=lambda inst, val: setattr(inst, 'text_size', (val[0] - 10, None)))
         self.add_widget(self.nombre_label)
 
     def _update_canvas(self, *args):
@@ -212,7 +205,6 @@ class PantallaDetalleProducto(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.pantalla_anterior = 'principal'
-        self.canvas_bg = None
         self.cantidad = 1
 
         layout_principal = BoxLayout(orientation="vertical")
@@ -225,10 +217,10 @@ class PantallaDetalleProducto(Screen):
         box_contenido = BoxLayout(orientation="vertical", padding=15, spacing=15, size_hint_y=None)
         box_contenido.bind(minimum_height=box_contenido.setter('height'))
 
-        self.foto_producto = AsyncImage(size_hint_y=None, height=180, allow_stretch=True, keep_ratio=True)
+        self.foto_producto = AsyncImage(size_hint_y=None, height=220, allow_stretch=True, keep_ratio=True)
         box_contenido.add_widget(self.foto_producto)
 
-        self.nombre_producto = MDLabel(text="", halign="center", font_style="H5", theme_text_color="Custom", text_color="#C0392B", bold=True, size_hint_y=None, height=30)
+        self.nombre_producto = MDLabel(text="", halign="center", font_style="H5", theme_text_color="Custom", text_color="#C0392B", bold=True, size_hint_y=None, height=40)
         box_contenido.add_widget(self.nombre_producto)
 
         layout_cantidad = BoxLayout(orientation="horizontal", size_hint_y=None, height=45, spacing=10, padding=[40, 0, 40, 0])
@@ -324,8 +316,7 @@ class PantallaDetalleProducto(Screen):
             self.lbl_cantidad.text = str(self.cantidad)
 
 
-# --- SISTEMA DE LOGEO Y REGISTRO ---
-
+# --- LOGIN ---
 class PantallaLogin(Screen):
     def ingresar(self, instance):
         usuario = self.txt_usuario.text.strip()
@@ -334,7 +325,6 @@ class PantallaLogin(Screen):
 
         if usuario in app.usuarios and app.usuarios[usuario]["clave"] == clave:
             rol = app.usuarios[usuario]["rol"]
-            
             self.txt_usuario.text = ""
             self.txt_clave.text = ""
             self.lbl_resultado.text = ""
@@ -355,7 +345,6 @@ class PantallaLogin(Screen):
         self.txt_clave = MDTextField(hint_text="Contrasena", password=True)
 
         box_botones = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=50)
-        
         boton_ingresar = MDRaisedButton(text="Ingresar", size_hint_x=0.5, md_bg_color=(0.52, 0.42, 0.31, 1))
         boton_ingresar.bind(on_release=self.ingresar)
         
@@ -366,10 +355,7 @@ class PantallaLogin(Screen):
         box_botones.add_widget(boton_registro)
 
         contenedor_logo_login = AnchorLayout(size_hint_y=None, height=160)
-        self.imagen_logo = LogoRedondoCircular(
-            source_url=URL_NUEVO_LOGO,
-            size_pixels=130
-        )
+        self.imagen_logo = LogoRedondoCircular(source_url=URL_NUEVO_LOGO, size_pixels=130)
         contenedor_logo_login.add_widget(self.imagen_logo)
 
         self.lbl_resultado = MDLabel(text="", halign="center", theme_text_color="Error")
@@ -399,7 +385,6 @@ class PantallaRegistro(Screen):
         self.lbl_resultado = MDLabel(text="", halign="center", theme_text_color="Error")
 
         box_botones = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=50)
-        
         btn_volver = MDRaisedButton(text="Volver", size_hint_x=0.5, md_bg_color="#C0392B")
         btn_volver.bind(on_release=self.volver_login)
         
@@ -439,7 +424,6 @@ class PantallaRegistro(Screen):
             return
 
         app.usuarios[usr] = {"clave": clave, "rol": "cliente", "correo": correo}
-        
         self.lbl_resultado.theme_text_color = "Custom"
         self.lbl_resultado.text_color = (0, 0.5, 0, 1)
         self.lbl_resultado.text = "Cuenta creada. Volviendo al login..."
@@ -447,17 +431,17 @@ class PantallaRegistro(Screen):
         self.txt_nuevo_usuario.text = ""
         self.txt_correo.text = ""
         self.txt_nueva_clave.text = ""
-
         Clock.schedule_once(lambda dt: self.volver_login(None), 1.5)
 
 
+# --- PANTALLA PRINCIPAL (2 EN 2 ESPACIADO) ---
 class Principal(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        layout_principal = BoxLayout(orientation="vertical", padding=[10, 0, 10, 10], spacing=8)
+        layout_principal = BoxLayout(orientation="vertical", padding=[12, 0, 12, 12], spacing=10)
 
-        contenedor_iconos = MDTopAppBar(title="", elevation=3, size_hint_y=0.14, md_bg_color="#856C50")
+        contenedor_iconos = MDTopAppBar(title="", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
         fila_logos = BoxLayout(orientation="horizontal", padding=[10, 0, 10, 0], spacing=10)
 
         btn_fb = MDIconButton(icon="facebook", theme_icon_color="Custom", icon_color=(1, 1, 1, 1), pos_hint={'center_y': 0.5})
@@ -482,16 +466,11 @@ class Principal(Screen):
         contenedor_iconos.add_widget(fila_logos)
         layout_principal.add_widget(contenedor_iconos)
         
-        fila_titulo = BoxLayout(orientation="horizontal", size_hint_y=0.18, spacing=10)
-
-        contenedor_logo_fijo = AnchorLayout(size_hint_x=0.35, anchor_x='center', anchor_y='center')
+        fila_titulo = BoxLayout(orientation="horizontal", size_hint_y=0.16, spacing=10)
+        contenedor_logo_fijo = AnchorLayout(size_hint_x=0.30, anchor_x='center', anchor_y='center')
         
-        self.logo_widget = LogoRedondoCircular(
-            source_url=URL_NUEVO_LOGO,
-            size_pixels=100
-        )
+        self.logo_widget = LogoRedondoCircular(source_url=URL_NUEVO_LOGO, size_pixels=90)
         self.logo_widget.iniciar_giro(velocidad=1.5)
-
         contenedor_logo_fijo.add_widget(self.logo_widget)
         fila_titulo.add_widget(contenedor_logo_fijo)
 
@@ -501,7 +480,8 @@ class Principal(Screen):
             theme_text_color="Custom",
             text_color="#C0392B",
             font_style="H5",
-            size_hint_x=0.65
+            bold=True,
+            size_hint_x=0.70
         )
         fila_titulo.add_widget(label_titulo)
         layout_principal.add_widget(fila_titulo)
@@ -516,17 +496,17 @@ class Principal(Screen):
         layout_principal.add_widget(self.txt_buscar)
 
         titulo1 = Label(
-            text="  Lo Mas Vendido  ",
+            text="Lo Más Vendido",
             font_size='18sp',
             bold=True,
             color=(0.80, 0.10, 0.05, 1),
-            size_hint_y=0.055
+            size_hint_y=0.06
         )
         layout_principal.add_widget(titulo1)
 
-        self.mi_carousel = Carousel(direction='right', loop=True, size_hint_y=0.445) 
+        self.mi_carousel = Carousel(direction='right', loop=True, size_hint_y=0.46) 
         layout_principal.add_widget(self.mi_carousel)
-        Clock.schedule_interval(self.avanzar_carrusel, 3)
+        Clock.schedule_interval(self.avanzar_carrusel, 4)
 
         barra = BoxLayout(orientation="horizontal", size_hint_y=0.13, spacing=5, padding=[5, 2, 5, 2])
         nav_iconos = [
@@ -574,7 +554,7 @@ class Principal(Screen):
 
         if not prods:
             lbl = MDLabel(
-                text="No se encontraron productos con ese nombre.",
+                text="No se encontraron productos.",
                 theme_text_color="Custom",
                 text_color="#856C50",
                 halign="center",
@@ -584,13 +564,13 @@ class Principal(Screen):
             self.mi_carousel.add_widget(lbl)
             return
 
-        for i in range(0, len(prods), 3):
-            fila = BoxLayout(orientation='horizontal', spacing=10, padding=[5, 0, 5, 0])
-            grupo = prods[i:i+3]
-            for p in grupo:
+        for i in range(0, len(prods), 2):
+            fila = BoxLayout(orientation='horizontal', spacing=14, padding=[8, 2, 8, 2])
+            grupo = prods[i:i+2]
+            for p in groupo:=grupo:
                 fila.add_widget(ProductCard(p["url"], p["nombre"]))
-            for _ in range(3 - len(grupo)):
-                fila.add_widget(Label(size_hint_x=0.33))
+            for _ in range(2 - len(grupo)):
+                fila.add_widget(Label(size_hint_x=0.5))
             self.mi_carousel.add_widget(fila)
 
     def avanzar_carrusel(self, dt):
@@ -610,12 +590,13 @@ class Principal(Screen):
             self.manager.current = 'principal'
 
 
+# --- CATEGORÍAS ---
 class PantallaCategorias(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout_principal = BoxLayout(orientation="vertical")
 
-        barra_superior = MDTopAppBar(title="Mas Productos", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
+        barra_superior = MDTopAppBar(title="Más Productos", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
         layout_principal.add_widget(barra_superior)
 
         fila_switch = BoxLayout(orientation="horizontal", size_hint_y=0.08, padding=[10, 0, 10, 0])
@@ -626,7 +607,7 @@ class PantallaCategorias(Screen):
         layout_principal.add_widget(fila_switch)
 
         scroll = ScrollView(size_hint=(1, 1))
-        self.grid_productos = GridLayout(cols=2, spacing=10, padding=10, size_hint_y=None)
+        self.grid_productos = GridLayout(cols=2, spacing=14, padding=12, size_hint_y=None)
         self.grid_productos.bind(minimum_height=self.grid_productos.setter('height'))
         scroll.add_widget(self.grid_productos)
         layout_principal.add_widget(scroll)
@@ -645,11 +626,12 @@ class PantallaCategorias(Screen):
         for p in app.productos:
             prod = ProductCard(p["url"], p["nombre"])
             prod.size_hint_y = None
-            prod.height = 220  
+            prod.height = 240  
             prod.size_hint_x = 1
             self.grid_productos.add_widget(prod)
 
 
+# --- FAVORITOS ---
 class Favoritos(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -659,7 +641,7 @@ class Favoritos(Screen):
         self.layout_favoritos.add_widget(self.barra_superior)
 
         self.scroll = ScrollView(size_hint=(1, 0.74))
-        self.grid = GridLayout(cols=2, spacing=10, padding=10, size_hint_y=None)
+        self.grid = GridLayout(cols=2, spacing=14, padding=12, size_hint_y=None)
         self.grid.bind(minimum_height=self.grid.setter('height'))
         self.scroll.add_widget(self.grid)
         self.layout_favoritos.add_widget(self.scroll)
@@ -675,7 +657,6 @@ class Favoritos(Screen):
 
         barra_regresar.add_widget(btn_volver)
         self.layout_favoritos.add_widget(barra_regresar)
-
         self.add_widget(self.layout_favoritos)
 
     def on_enter(self):
@@ -684,7 +665,7 @@ class Favoritos(Screen):
         
         if not app.favoritos:
             lbl = MDLabel(
-                text="No tienes productos en Favoritos aun.\n¡Explora y anade algunos!",
+                text="No tienes productos en Favoritos aún.",
                 halign="center", theme_text_color="Custom",
                 text_color="#856C50", font_style="Subtitle1", size_hint_y=None, height=100
             )
@@ -693,37 +674,33 @@ class Favoritos(Screen):
             for fav in app.favoritos:
                 prod = ProductCard(fav['url'], fav['name'])
                 prod.size_hint_y = None
-                prod.height = 220
+                prod.height = 240
                 prod.size_hint_x = 1
                 self.grid.add_widget(prod)
 
 
+# --- CARRITO (MENÚ VISIBLE Y ESPACIADO COMPLETO) ---
 class PantallaCarrito(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         self.metodo_pago = ""
         self.ruta_comprobante = None
 
         layout_principal = BoxLayout(orientation="vertical")
-        
-        barra_superior = MDTopAppBar(title="Mi Carrito de Compras", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
+        barra_superior = MDTopAppBar(title="Mi Carrito", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
         layout_principal.add_widget(barra_superior)
 
         scroll = ScrollView(size_hint=(1, 0.74))
-        layout_carrito = BoxLayout(orientation="vertical", padding=20, spacing=15, size_hint_y=None)
+        layout_carrito = BoxLayout(orientation="vertical", padding=20, spacing=18, size_hint_y=None)
         layout_carrito.bind(minimum_height=layout_carrito.setter('height'))
 
         avatar_layout = AnchorLayout(size_hint_y=None, height=100, anchor_x='center', anchor_y='center')
-        self.foto_carrito = LogoRedondoCircular(
-            source_url=URL_NUEVO_LOGO,
-            size_pixels=80
-        )
+        self.foto_carrito = LogoRedondoCircular(source_url=URL_NUEVO_LOGO, size_pixels=80)
         avatar_layout.add_widget(self.foto_carrito)
         layout_carrito.add_widget(avatar_layout)
 
-        self.txt_direccion = MDTextField(text="Av. Central 123", hint_text="Direccion de Envio", mode="round", size_hint_y=None, height=50)
-        self.txt_nota = MDTextField(text="Dejar en porteria", hint_text="Nota especial para el regalo", mode="round", size_hint_y=None, height=50)
+        self.txt_direccion = MDTextField(text="Av. Central 123", hint_text="Dirección de Envío", mode="round", size_hint_y=None, height=50)
+        self.txt_nota = MDTextField(text="Dejar en portería", hint_text="Nota especial", mode="round", size_hint_y=None, height=50)
         layout_carrito.add_widget(self.txt_direccion)
         layout_carrito.add_widget(self.txt_nota)
 
@@ -734,67 +711,59 @@ class PantallaCarrito(Screen):
         fila_switch.add_widget(self.switch_regalo)
         layout_carrito.add_widget(fila_switch)
 
-        lbl_titulo_pago = MDLabel(
-            text="Selecciona tu Metodo de Pago:",
-            theme_text_color="Custom",
-            text_color="#856C50",
-            font_style="Subtitle1",
-            bold=True,
-            size_hint_y=None,
-            height=40
-        )
+        lbl_titulo_pago = MDLabel(text="Método de Pago:", theme_text_color="Custom", text_color="#856C50", font_style="Subtitle1", bold=True, size_hint_y=None, height=40)
         layout_carrito.add_widget(lbl_titulo_pago)
 
-        self.btn_desplegable_pago = MDRaisedButton(
-            text="Seleccionar Metodo",
-            md_bg_color="#856C50",
-            size_hint_x=1,
-            on_release=lambda x: self.menu_pago.open()
-        )
+        self.btn_desplegable_pago = MDRaisedButton(text="Seleccionar Método", md_bg_color="#856C50", size_hint_x=1, on_release=lambda x: self.menu_pago.open())
         layout_carrito.add_widget(self.btn_desplegable_pago)
 
         menu_items = [
-            {"viewclass": "OneLineListItem", "text": "Tarjeta de Credito/Debito", "on_release": lambda x="Tarjeta de Credito/Debito": self.seleccionar_pago(x)},
-            {"viewclass": "OneLineListItem", "text": "PayPal", "on_release": lambda x="PayPal": self.seleccionar_pago(x)},
-            {"viewclass": "OneLineListItem", "text": "Transferencia Bancaria", "on_release": lambda x="Transferencia Bancaria": self.seleccionar_pago(x)},
-            {"viewclass": "OneLineListItem", "text": "Efectivo", "on_release": lambda x="Efectivo": self.seleccionar_pago(x)},
+            {
+                "viewclass": "OneLineListItem", 
+                "text": "Tarjeta de Crédito/Débito", 
+                "text_color": (0.2, 0.1, 0, 1),
+                "on_release": lambda x="Tarjeta de Crédito/Débito": self.seleccionar_pago(x)
+            },
+            {
+                "viewclass": "OneLineListItem", 
+                "text": "PayPal", 
+                "text_color": (0.2, 0.1, 0, 1),
+                "on_release": lambda x="PayPal": self.seleccionar_pago(x)
+            },
+            {
+                "viewclass": "OneLineListItem", 
+                "text": "Transferencia Bancaria", 
+                "text_color": (0.2, 0.1, 0, 1),
+                "on_release": lambda x="Transferencia Bancaria": self.seleccionar_pago(x)
+            },
+            {
+                "viewclass": "OneLineListItem", 
+                "text": "Efectivo", 
+                "text_color": (0.2, 0.1, 0, 1),
+                "on_release": lambda x="Efectivo": self.seleccionar_pago(x)
+            },
         ]
         
         self.menu_pago = MDDropdownMenu(
-            caller=self.btn_desplegable_pago,
-            items=menu_items,
+            caller=self.btn_desplegable_pago, 
+            items=menu_items, 
             width_mult=4,
+            background_color=(1, 1, 1, 1) 
         )
 
-        self.contenedor_datos_pago = BoxLayout(orientation="vertical", size_hint_y=None, height=0, spacing=10)
+        self.contenedor_datos_pago = BoxLayout(orientation="vertical", size_hint_y=None, height=0, spacing=15, padding=[0, 10, 0, 10])
         layout_carrito.add_widget(self.contenedor_datos_pago)
 
-        self.lbl_metodo_seleccionado = MDLabel(
-            text="Ningun metodo seleccionado",
-            theme_text_color="Custom",
-            text_color="#856C50",
-            halign="center",
-            font_style="Caption",
-            size_hint_y=None,
-            height=30
-        )
+        self.lbl_metodo_seleccionado = MDLabel(text="Ningún método seleccionado", theme_text_color="Custom", text_color="#856C50", halign="center", font_style="Caption", size_hint_y=None, height=30)
         layout_carrito.add_widget(self.lbl_metodo_seleccionado)
 
-        btn_procesar = MDRaisedButton(
-            text="Procesar Pedido",
-            md_bg_color="#856C50",
-            pos_hint={'center_x': 0.5},
-            size_hint_y=None,
-            height=50,
-            on_press=self.procesar_pedido
-        )
+        btn_procesar = MDRaisedButton(text="Procesar Pedido", md_bg_color="#856C50", pos_hint={'center_x': 0.5}, size_hint_y=None, height=50, on_press=self.procesar_pedido)
         layout_carrito.add_widget(btn_procesar)
 
         scroll.add_widget(layout_carrito)
         layout_principal.add_widget(scroll)
 
         barra_retorno = BoxLayout(orientation="horizontal", size_hint_y=0.14, spacing=10, padding=5)
-
         btn_inicio = BotonBarra()
         btn_inicio.bind(on_release=lambda x: setattr(self.manager, 'current', 'principal'))
         ic1 = MDIconButton(icon="home", theme_icon_color="Custom", icon_color=(0.4, 0.3, 0.2, 1), pos_hint={'center_x': 0.5})
@@ -811,81 +780,46 @@ class PantallaCarrito(Screen):
         barra_retorno.add_widget(btn_inicio)
         barra_retorno.add_widget(BoxLayout())
         barra_retorno.add_widget(btn_carr)
-        
         layout_principal.add_widget(barra_retorno)
+
         self.add_widget(layout_principal)
 
     def seleccionar_pago(self, metodo):
         self.metodo_pago = metodo
         self.btn_desplegable_pago.text = metodo
         self.menu_pago.dismiss()
-
-        self.lbl_metodo_seleccionado.text = f"Metodo seleccionado: {metodo}"
+        self.lbl_metodo_seleccionado.text = f"Método seleccionado: {metodo}"
         self.contenedor_datos_pago.clear_widgets()
         
-        if metodo == "Tarjeta de Credito/Debito":
-            self.contenedor_datos_pago.height = 130
-            self.txt_num_tarjeta = MDTextField(hint_text="Numero de Tarjeta (16 digitos)", mode="round", size_hint_y=None, height=50)
-            
+        if metodo == "Tarjeta de Crédito/Débito":
+            self.contenedor_datos_pago.height = 140
+            self.txt_num_tarjeta = MDTextField(hint_text="Número de Tarjeta (16 dígitos)", mode="round", size_hint_y=None, height=50)
             box_horizontal = BoxLayout(orientation="horizontal", spacing=10, size_hint_y=None, height=50)
             self.txt_fecha_exp = MDTextField(hint_text="MM/AA", mode="round")
             self.txt_cvv = MDTextField(hint_text="CVV", mode="round", password=True)
             box_horizontal.add_widget(self.txt_fecha_exp)
             box_horizontal.add_widget(self.txt_cvv)
-            
             self.contenedor_datos_pago.add_widget(self.txt_num_tarjeta)
             self.contenedor_datos_pago.add_widget(box_horizontal)
         elif metodo == "Transferencia Bancaria":
-            self.contenedor_datos_pago.height = 190
+            self.contenedor_datos_pago.height = 200
             self.ruta_comprobante = None
-
             lbl_datos_banco = MDLabel(
-                text=(
-                    "Banco: Pichincha\n"
-                    "Numero de cuenta: 2213116852\n"
-                    "Cedula: 1752775922"
-                ),
-                theme_text_color="Custom",
-                text_color="#856C50",
-                halign="center",
-                font_style="Body1",
-                bold=True,
-                size_hint_y=None,
-                height=90
+                text="Banco: Pichincha\nNúmero de cuenta: 2213116852\nCédula: 1752775922",
+                theme_text_color="Custom", text_color="#856C50", halign="center", font_style="Body1", bold=True, size_hint_y=None, height=90
             )
             self.contenedor_datos_pago.add_widget(lbl_datos_banco)
-
-            btn_subir_comprobante = MDRaisedButton(
-                text="Abrir Galería / Archivos",
-                md_bg_color="#856C50",
-                size_hint_x=1,
-                size_hint_y=None,
-                height=50,
-                on_release=self.abrir_selector_comprobante
-            )
+            btn_subir_comprobante = MDRaisedButton(text="Abrir Galería / Archivos", md_bg_color="#856C50", size_hint_x=1, height=50, on_release=self.abrir_selector_comprobante)
             self.contenedor_datos_pago.add_widget(btn_subir_comprobante)
-
-            self.lbl_comprobante = MDLabel(
-                text="Ningun comprobante seleccionado",
-                theme_text_color="Custom",
-                text_color="#856C50",
-                halign="center",
-                font_style="Caption",
-                size_hint_y=None,
-                height=30
-            )
+            self.lbl_comprobante = MDLabel(text="Ningún comprobante seleccionado", theme_text_color="Custom", text_color="#856C50", halign="center", font_style="Caption", size_hint_y=None, height=30)
             self.contenedor_datos_pago.add_widget(self.lbl_comprobante)
         else:
-            self.contenedor_datos_pago.height = 60
-            self.txt_cantidad = MDTextField(hint_text="Ingrese la cantidad o monto a pagar", mode="round", size_hint_y=None, height=50)
+            self.contenedor_datos_pago.height = 70
+            self.txt_cantidad = MDTextField(hint_text="Monto a pagar", mode="round", size_hint_y=None, height=50)
             self.contenedor_datos_pago.add_widget(self.txt_cantidad)
 
     def abrir_selector_comprobante(self, *args):
-        filechooser.open_file(
-            title="Selecciona el comprobante de pago",
-            filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")],
-            on_selection=self._comprobante_seleccionado
-        )
+        filechooser.open_file(title="Selecciona el comprobante", filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")], on_selection=self._comprobante_seleccionado)
 
     def _comprobante_seleccionado(self, selection):
         if selection:
@@ -894,79 +828,51 @@ class PantallaCarrito(Screen):
 
     def procesar_pedido(self, instance):
         if self.metodo_pago == "":
-            dialog = MDDialog(
-                title="Atencion",
-                text="Por favor selecciona un metodo de pago antes de continuar."
-            )
+            dialog = MDDialog(title="Atención", text="Por favor selecciona un método de pago.")
         else:
-            envoltura = "Si" if self.switch_regalo.active else "No"
+            envoltura = "Sí" if self.switch_regalo.active else "No"
             detalles = ""
-            
-            if self.metodo_pago == "Tarjeta de Credito/Debito":
+            if self.metodo_pago == "Tarjeta de Crédito/Débito":
                 num = self.txt_num_tarjeta.text
                 terminacion = num[-4:] if len(num) >= 4 else "****"
-                detalles = f"Pago con tarjeta terminada en: {terminacion}"
+                detalles = f"Tarjeta terminada en: {terminacion}"
             elif self.metodo_pago == "Transferencia Bancaria":
-                if self.ruta_comprobante:
-                    detalles = f"Comprobante adjunto: {os.path.basename(self.ruta_comprobante)}"
-                else:
-                    detalles = "No se adjunto comprobante de pago"
+                detalles = f"Comprobante: {os.path.basename(self.ruta_comprobante)}" if self.ruta_comprobante else "Sin comprobante"
             else:
-                detalles = f"Cantidad declarada/ingresada: {self.txt_cantidad.text}"
+                detalles = f"Monto: {self.txt_cantidad.text}"
                 
             dialog = MDDialog(
                 title="Pedido Confirmado",
-                text=(
-                    f"Direccion: {self.txt_direccion.text}\n"
-                    f"Nota: {self.txt_nota.text}\n"
-                    f"Envoltura de regalo: {envoltura}\n"
-                    f"Metodo de pago: {self.metodo_pago}\n"
-                    f"Detalles: {detalles}"
-                )
+                text=f"Dirección: {self.txt_direccion.text}\nNota: {self.txt_nota.text}\nEnvoltura: {envoltura}\nMétodo: {self.metodo_pago}\n{detalles}"
             )
         dialog.open()
 
 
+# --- PERFIL ---
 class PantallaPerfil(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
         layout_perfil = BoxLayout(orientation="vertical", padding=20, spacing=10)
 
-        barra_superior = MDTopAppBar(title="Mi Perfil de Usuario", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
+        barra_superior = MDTopAppBar(title="Mi Perfil", elevation=3, size_hint_y=0.12, md_bg_color="#856C50")
         layout_perfil.add_widget(barra_superior)
 
         avatar_layout = AnchorLayout(size_hint_y=0.25, anchor_x='center', anchor_y='center')
-        
-        avatar_container = AnchorLayout(
-            anchor_x='right',
-            anchor_y='bottom',
-            size_hint=(None, None),
-            size=(90, 90)
-        )
-        
-        self.foto_perfil = LogoRedondoCircular(
-            source_url=URL_NUEVO_LOGO,
-            size_pixels=90
-        )
+        avatar_container = AnchorLayout(anchor_x='right', anchor_y='bottom', size_hint=(None, None), size=(90, 90))
+        self.foto_perfil = LogoRedondoCircular(source_url=URL_NUEVO_LOGO, size_pixels=90)
         
         btn_camara = MDIconButton(
-            icon="camera",
-            theme_icon_color="Custom",
-            icon_color=(1, 1, 1, 1),
-            md_bg_color=[133/255.0, 108/255.0, 80/255.0, 1],
-            icon_size="18sp",
+            icon="camera", theme_icon_color="Custom", icon_color=(1, 1, 1, 1),
+            md_bg_color=[133/255.0, 108/255.0, 80/255.0, 1], icon_size="18sp",
             on_release=self.abrir_selector_foto
         )
-        
         avatar_container.add_widget(self.foto_perfil)
         avatar_container.add_widget(btn_camara)
-        
         avatar_layout.add_widget(avatar_container)
         layout_perfil.add_widget(avatar_layout)
 
         self.txt_nombre = MDTextField(text="Usuario Registrado", hint_text="Nombre Completo", mode="round", size_hint_y=0.08)
-        self.txt_correo = MDTextField(text="correo@email.com", hint_text="Correo Electronico", mode="round", size_hint_y=0.08)
+        self.txt_correo = MDTextField(text="correo@email.com", hint_text="Correo Electrónico", mode="round", size_hint_y=0.08)
         layout_perfil.add_widget(self.txt_nombre)
         layout_perfil.add_widget(self.txt_correo)
 
@@ -978,13 +884,12 @@ class PantallaPerfil(Screen):
         layout_perfil.add_widget(fila_switch)
 
         btn_guardar = MDRaisedButton(text="Guardar Cambios", md_bg_color="#856C50", pos_hint={'center_x': 0.5}, size_hint_y=0.07, on_press=self.guardar_datos)
-        btn_cerrar_sesion = MDRaisedButton(text="Cerrar Sesion", md_bg_color="#C0392B", pos_hint={'center_x': 0.5}, size_hint_y=0.07, on_release=self.cerrar_sesion)
+        btn_cerrar_sesion = MDRaisedButton(text="Cerrar Sesión", md_bg_color="#C0392B", pos_hint={'center_x': 0.5}, size_hint_y=0.07, on_release=self.cerrar_sesion)
         
         layout_perfil.add_widget(btn_guardar)
         layout_perfil.add_widget(btn_cerrar_sesion)
 
         barra_retorno = BoxLayout(orientation="horizontal", size_hint_y=0.14, spacing=10, padding=5)
-
         btn_inicio = BotonBarra()
         btn_inicio.bind(on_release=lambda x: setattr(self.manager, 'current', 'principal'))
         ic3 = MDIconButton(icon="home", theme_icon_color="Custom", icon_color=(0.4, 0.3, 0.2, 1), pos_hint={'center_x': 0.5})
@@ -1006,18 +911,14 @@ class PantallaPerfil(Screen):
         self.add_widget(layout_perfil)
 
     def abrir_selector_foto(self, *args):
-        filechooser.open_file(
-            title="Selecciona una imagen",
-            filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")],
-            on_selection=self._foto_seleccionada
-        )
+        filechooser.open_file(title="Selecciona una imagen", filters=[("Imágenes", "*.png", "*.jpg", "*.jpeg")], on_selection=self._foto_seleccionada)
 
     def _foto_seleccionada(self, selection):
         if selection:
             self.foto_perfil.imagen.source = selection[0]
 
     def guardar_datos(self, instance):
-        dialog = MDDialog(title="Perfil Actualizado", text="Tus datos se guardaron con exito.")
+        dialog = MDDialog(title="Perfil Actualizado", text="Tus datos se guardaron con éxito.")
         dialog.open()
 
     def cerrar_sesion(self, instance):
@@ -1025,48 +926,24 @@ class PantallaPerfil(Screen):
         self.manager.current = "login"
 
 
-# --- PANTALLAS DE ADMINISTRADOR ---
-
+# --- VISTAS ADMINISTRADOR ---
 class AdminPrincipal(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         layout = BoxLayout(orientation="vertical")
-        
         barra_superior = MDTopAppBar(title="Panel de Administrador", elevation=3, md_bg_color="#856C50")
         layout.add_widget(barra_superior)
         
         box = BoxLayout(orientation="vertical", padding=30, spacing=30)
-        
-        lbl_bienvenida = MDLabel(
-            text="Bienvenido, Administrador",
-            font_style="H5",
-            halign="center",
-            theme_text_color="Custom",
-            text_color="#856C50",
-            size_hint_y=0.2
-        )
+        lbl_bienvenida = MDLabel(text="Bienvenido, Administrador", font_style="H5", halign="center", theme_text_color="Custom", text_color="#856C50", size_hint_y=0.2)
         box.add_widget(lbl_bienvenida)
         
-        btn_inv = MDRaisedButton(
-            text="Gestionar Inventario",
-            size_hint_x=1,
-            height=60,
-            md_bg_color="#856C50",
-            on_release=self.ir_inventario
-        )
-        
-        btn_salir = MDRaisedButton(
-            text="Cerrar Sesion",
-            size_hint_x=1,
-            height=60,
-            md_bg_color="#C0392B",
-            on_release=self.cerrar_sesion
-        )
+        btn_inv = MDRaisedButton(text="Gestionar Inventario", size_hint_x=1, height=60, md_bg_color="#856C50", on_release=self.ir_inventario)
+        btn_salir = MDRaisedButton(text="Cerrar Sesión", size_hint_x=1, height=60, md_bg_color="#C0392B", on_release=self.cerrar_sesion)
         
         box.add_widget(btn_inv)
         box.add_widget(btn_salir)
         box.add_widget(BoxLayout(size_hint_y=0.4))
-        
         layout.add_widget(box)
         self.add_widget(layout)
         
@@ -1091,20 +968,12 @@ class PantallaAdminInventario(Screen):
         scroll = ScrollView()
         self.lista_productos = BoxLayout(orientation="vertical", padding=10, spacing=15, size_hint_y=None)
         self.lista_productos.bind(minimum_height=self.lista_productos.setter('height'))
-        
-        scroll.add_widget(self.lista_productos)
+        scroll.add_widget(scroll_contenido:=scroll)
         layout_principal.add_widget(scroll)
         
-        btn_agregar = MDFloatingActionButton(
-            icon="plus",
-            md_bg_color="#856C50",
-            pos_hint={"right": 0.95},
-            on_release=self.mostrar_dialogo_agregar
-        )
-        
+        btn_agregar = MDFloatingActionButton(icon="plus", md_bg_color="#856C50", pos_hint={"right": 0.95}, on_release=self.mostrar_dialogo_agregar)
         box_inferior = AnchorLayout(size_hint_y=None, height=80, anchor_x="right", anchor_y="center", padding=15)
         box_inferior.add_widget(btn_agregar)
-        
         layout_principal.add_widget(box_inferior)
         self.add_widget(layout_principal)
         
@@ -1115,43 +984,24 @@ class PantallaAdminInventario(Screen):
         self.lista_productos.clear_widgets()
         app = MDApp.get_running_app()
         
-        lbl = MDLabel(
-            text="Edita el stock y nombres:", 
-            font_style="Subtitle1", 
-            bold=True, 
-            size_hint_y=None, 
-            height=40,
-            theme_text_color="Custom",
-            text_color="#856C50"
-        )
+        lbl = MDLabel(text="Edita el stock y nombres:", font_style="Subtitle1", bold=True, size_hint_y=None, height=40, theme_text_color="Custom", text_color="#856C50")
         self.lista_productos.add_widget(lbl)
         
         for p in app.productos:
-            tarjeta = MDCard(
-                orientation="horizontal",
-                size_hint_y=None,
-                height=130,
-                padding=10,
-                spacing=15,
-                elevation=2,
-                radius=[15, 15, 15, 15]
-            )
-            
+            tarjeta = MDCard(orientation="horizontal", size_hint_y=None, height=130, padding=10, spacing=15, elevation=2, radius=[15, 15, 15, 15])
             img = AsyncImage(source=p["url"], size_hint_x=0.30, allow_stretch=True, keep_ratio=True)
             
             caja_inputs = BoxLayout(orientation="vertical", size_hint_x=0.45, spacing=5)
             txt_nom = MDTextField(text=p["nombre"], hint_text="Nombre", size_hint_y=0.5, font_size="13sp")
             txt_stock = MDTextField(text=str(p["stock"]), hint_text="Stock", size_hint_y=0.5, font_size="13sp")
-            
             caja_inputs.add_widget(txt_nom)
             caja_inputs.add_widget(txt_stock)
             
-            caja_botones = BoxLayout(orientation="vertical", size_hint_x=0.25, spacing=10, padding=[0, 5, 0, 5])
-            
-            btn_guardar = MDRaisedButton(text="Guardar", md_bg_color="#856C50", size_hint=(1, 0.5), font_size="11sp", elevation=1)
+            caja_botones = BoxLayout(orientation="vertical", size_hint_x=0.25, spacing=10)
+            btn_guardar = MDRaisedButton(text="Guardar", md_bg_color="#856C50", size_hint=(1, 0.5), font_size="11sp")
             btn_guardar.bind(on_release=lambda instance, prod=p, n=txt_nom, s=txt_stock: self.guardar_cambio(prod, n.text, s.text))
             
-            btn_eliminar = MDRaisedButton(text="Borrar", md_bg_color="#C0392B", size_hint=(1, 0.5), font_size="11sp", elevation=1)
+            btn_eliminar = MDRaisedButton(text="Borrar", md_bg_color="#C0392B", size_hint=(1, 0.5), font_size="11sp")
             btn_eliminar.bind(on_release=lambda instance, prod=p: self.eliminar_producto(prod))
             
             caja_botones.add_widget(btn_guardar)
@@ -1160,7 +1010,6 @@ class PantallaAdminInventario(Screen):
             tarjeta.add_widget(img)
             tarjeta.add_widget(caja_inputs)
             tarjeta.add_widget(caja_botones)
-            
             self.lista_productos.add_widget(tarjeta)
             
     def guardar_cambio(self, prod_dict, nuevo_nombre, nuevo_stock):
@@ -1168,7 +1017,6 @@ class PantallaAdminInventario(Screen):
         nombre_anterior = prod_dict["nombre"]
         try:
             nuevo_stock_int = int(nuevo_stock)
-            
             prod_dict["nombre"] = nuevo_nombre
             prod_dict["stock"] = nuevo_stock_int
             
@@ -1176,13 +1024,11 @@ class PantallaAdminInventario(Screen):
                 if fav['name'] == nombre_anterior:
                     fav['name'] = nuevo_nombre
                     
-            d = MDDialog(title="Exito", text="Producto actualizado correctamente.")
+            d = MDDialog(title="Éxito", text="Producto actualizado.")
             d.open()
-            
             self.refrescar_lista()
-            
         except ValueError:
-            d = MDDialog(title="Error", text="El stock debe ser un numero entero.")
+            d = MDDialog(title="Error", text="El stock debe ser entero.")
             d.open()
             
     def eliminar_producto(self, prod_dict):
@@ -1193,7 +1039,6 @@ class PantallaAdminInventario(Screen):
         
     def mostrar_dialogo_agregar(self, instance):
         contenido = BoxLayout(orientation="vertical", spacing=15, padding=[10, 20, 10, 10], size_hint_y=None, height=250)
-        
         txt_url = MDTextField(hint_text="URL de la imagen", mode="rectangle")
         txt_nom = MDTextField(hint_text="Nombre del producto", mode="rectangle")
         txt_stock = MDTextField(hint_text="Cantidad de Stock", mode="rectangle")
@@ -1205,32 +1050,22 @@ class PantallaAdminInventario(Screen):
         box_btn = BoxLayout(size_hint_y=None, height=50, spacing=15)
         btn_cancelar = MDRaisedButton(text="Cancelar", md_bg_color="#C0392B", size_hint_x=0.5)
         btn_agregar = MDRaisedButton(text="Agregar", md_bg_color="#856C50", size_hint_x=0.5)
-        
         box_btn.add_widget(btn_cancelar)
         box_btn.add_widget(btn_agregar)
         contenido.add_widget(box_btn)
         
-        popup = Popup(
-            title="Agregar Nuevo Producto", 
-            content=contenido, 
-            size_hint=(0.9, 0.6), 
-            separator_color=[133/255.0, 108/255.0, 80/255.0, 1]
-        )
+        popup = Popup(title="Agregar Nuevo Producto", content=contenido, size_hint=(0.9, 0.6))
         btn_cancelar.bind(on_release=popup.dismiss)
         
         def confirmar(x):
             app = MDApp.get_running_app()
             try:
                 stk = int(txt_stock.text)
-                app.productos.append({
-                    "url": txt_url.text,
-                    "nombre": txt_nom.text,
-                    "stock": stk
-                })
+                app.productos.append({"url": txt_url.text, "nombre": txt_nom.text, "stock": stk})
                 self.refrescar_lista()
                 popup.dismiss()
             except ValueError:
-                d = MDDialog(title="Error", text="El stock debe ser numerico.")
+                d = MDDialog(title="Error", text="El stock debe ser numérico.")
                 d.open()
                 
         btn_agregar.bind(on_release=confirmar)
@@ -1241,18 +1076,15 @@ class PantallaAdminInventario(Screen):
         self.manager.current = "admin_principal"
 
 
-# --- ENTRADA DE LA APLICACIÓN ---
+# --- BASE DE DATOS LOCAL ---
 class MiApp(MDApp):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.favoritos = []
-        
-        # USUARIOS GLOBALES (Administrador y un Cliente por defecto)
         self.usuarios = {
             "Hola123": {"clave": "1701", "rol": "admin", "correo": "admin@tienda.com"},
             "AppRegalos": {"clave": "17112025", "rol": "cliente", "correo": "usuario@tienda.com"}
         }
-        
         self.productos = [
             {"url": "https://tussorpresas.com/wp-content/uploads/2024/01/globos-personalizados-cumpleanos.jpg", "nombre": "Globos", "stock": 10},
             {"url": "https://i.ebayimg.com/images/g/AWsAAeSwdwxpcx6p/s-l1600.webp", "nombre": "Peluches", "stock": 15},
@@ -1264,26 +1096,19 @@ class MiApp(MDApp):
 
     def build(self):
         SC = ScreenManager()
-
-        # Pantallas iniciales
         SC.add_widget(PantallaLogin(name='login'))
         SC.add_widget(PantallaRegistro(name='registro'))
-        
-        # Pantallas de Cliente
         SC.add_widget(Principal(name='principal'))
         SC.add_widget(PantallaDetalleProducto(name='detalle_producto'))
         SC.add_widget(PantallaCategorias(name='categories'))
         SC.add_widget(Favoritos(name='favoritos'))
         SC.add_widget(PantallaCarrito(name='carrito'))
         SC.add_widget(PantallaPerfil(name='perfil'))
-        
-        # Pantallas de Administrador
         SC.add_widget(AdminPrincipal(name='admin_principal'))
         SC.add_widget(PantallaAdminInventario(name='admin_inventario'))
 
         self.theme_cls.theme_style = 'Light'
         self.theme_cls.primary_palette = 'Brown'
-
         SC.current = 'login'
         return SC
 
