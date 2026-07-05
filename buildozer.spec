@@ -16,11 +16,11 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-# Se cambia a 1.0.2 para obligar a GitHub Actions a ignorar la caché corrupta anterior
+# Se cambia a 1.0.4 para forzar una reconstrucción limpia en la caché de GitHub Actions
 version = 1.0.4
 
 # (list) Application requirements
-# CORREGIDO: Se añade 'plyer' al final para que la app no se rompa al buscar el selector de archivos
+# Incluye Kivy, KivyMD, Pillow para imágenes y Plyer para interactuar con la galería/archivos del sistema.
 requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests, plyer
 
 # (str) Supported orientations (landscape, portrait or all)
@@ -29,13 +29,14 @@ orientation = portrait
 # (bool) Indicate if the application should be fullscreen or not
 fullscreen = 0
 
+
 # =============================================================================
 # Android specific configuration
 # =============================================================================
 
 # (list) Permissions
-# CRÍTICO: Permiso de internet para descargar el catálogo de imágenes externas
-android.permissions = INTERNET
+# INTERNET es crítico para el catálogo de imágenes y READ_EXTERNAL_STORAGE para buscar comprobantes.
+android.permissions = INTERNET, READ_EXTERNAL_STORAGE
 
 # (int) Target Android API, should be as high as possible.
 android.api = 34
@@ -53,7 +54,7 @@ android.skip_update = False
 android.accept_sdk_license = True
 
 # (str) Android architecture to build for.
-# Mantenemos únicamente arm64-v8a para evitar que GitHub Actions se quede sin RAM o tiempo límite
+# Compilar solo para arm64-v8a optimiza el uso de RAM en las máquinas de GitHub y cubre la mayoría de teléfonos modernos.
 android.archs = arm64-v8a
 
 # (bool) Use --private data storage (True) or --dir public storage (False)
@@ -61,6 +62,7 @@ android.private_storage = True
 
 # (str) Type of builds to run (debug or release)
 android.build_mode = debug
+
 
 # =============================================================================
 # Buildozer sections
