@@ -67,8 +67,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-android-v2-
 
-      # --- COMPILACIÓN DEL APK (Aceptando licencias automáticamente y reduciendo RAM) ---
-      - name: Build APK (Auto-accepting licenses)
+      # --- COMPILACIÓN DEL APK (Aceptando licencias de forma nativa) ---
+      - name: Build APK
         env:
           # Evita conflictos con NDKs preinstalados en GitHub Actions
           ANDROID_NDK_HOME: ""
@@ -79,8 +79,11 @@ jobs:
           export JOBS=1
           export MAKEFLAGS="-j1"
           
-          # 'yes |' responde automáticamente "y" a las licencias de Android
-          yes | buildozer -v android debug 2>&1 | tee build.log
+          # Aceptación de licencias de manera formal y silenciosa mediante el comando nativo de Buildozer
+          buildozer android licenses
+          
+          # Ejecución directa de la compilación
+          buildozer -v android debug 2>&1 | tee build.log
 
       # --- CORRECCIÓN DE RUTA DE ARTEFACTO (Búsqueda profunda recursiva) ---
       - name: Upload APK Artifact
