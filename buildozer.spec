@@ -17,7 +17,7 @@ source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
 # Se cambia a 1.0.2 para obligar a GitHub Actions a ignorar la caché corrupta anterior
-version = 1.0.2
+version = 1.0.4
 
 # (list) Application requirements
 # CORREGIDO: Se añade 'plyer' al final para que la app no se rompa al buscar el selector de archivos
