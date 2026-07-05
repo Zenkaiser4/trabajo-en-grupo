@@ -82,13 +82,13 @@ jobs:
           # 'yes |' responde automáticamente "y" a las licencias de Android
           yes | buildozer -v android debug 2>&1 | tee build.log
 
-      # Guardar el APK generado si todo sale bien
+      # --- CORRECCIÓN DE RUTA DE ARTEFACTO (Búsqueda profunda recursiva) ---
       - name: Upload APK Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: apk-digital
-          path: bin/*.apk
+          path: ./**/bin/*.apk
           if-no-files-found: error
 
       # Guardar los registros/logs de error si la compilación falla
