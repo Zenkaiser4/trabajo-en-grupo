@@ -16,8 +16,8 @@ source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 
 # (str) Application versioning (method 1)
-# Se cambia a 1.0.5 para forzar una reconstrucción limpia e ignorar residuos del error anterior
-version = 1.0.5
+# Se sube a 1.0.7 para asegurar una compilación limpia en GitHub Actions
+version = 1.0.7
 
 # (list) Application requirements
 requirements = python3, kivy==2.3.1, kivymd==1.2.0, pillow, urllib3, certifi, openssl, requests, plyer
