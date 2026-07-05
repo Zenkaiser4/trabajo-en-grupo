@@ -567,7 +567,7 @@ class Principal(Screen):
         for i in range(0, len(prods), 2):
             fila = BoxLayout(orientation='horizontal', spacing=14, padding=[8, 2, 8, 2])
             grupo = prods[i:i+2]
-            for p in groupo:=grupo:
+            for p in grupo:
                 fila.add_widget(ProductCard(p["url"], p["nombre"]))
             for _ in range(2 - len(grupo)):
                 fila.add_widget(Label(size_hint_x=0.5))
@@ -968,7 +968,7 @@ class PantallaAdminInventario(Screen):
         scroll = ScrollView()
         self.lista_productos = BoxLayout(orientation="vertical", padding=10, spacing=15, size_hint_y=None)
         self.lista_productos.bind(minimum_height=self.lista_productos.setter('height'))
-        scroll.add_widget(scroll_contenido:=scroll)
+        scroll.add_widget(self.lista_productos)
         layout_principal.add_widget(scroll)
         
         btn_agregar = MDFloatingActionButton(icon="plus", md_bg_color="#856C50", pos_hint={"right": 0.95}, on_release=self.mostrar_dialogo_agregar)
